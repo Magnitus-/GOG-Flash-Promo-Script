@@ -7,7 +7,7 @@ import sys
 from HTMLParser import HTMLParser
 import string
 
-PATTERNS = ["Flatout", "Master of Orion"]
+PATTERNS = ["Oddworld:", "Shelter 2", "Hotline Miami 2", "Chronicles+", "Origin", "Oath", "Escapists", "Sunless", "Apotheon", "Republic Commando", "Double Dragon", "Wings", "Door Kickers", "Enhanced Edition", "Wasterland 2", "Shovel Knight", "Where is my", "Betrayed Hope"]
 
 class InsomniaPromo2014(object):
 	SourceURL = 'http://www.gog.com/springinsomnia/ajax/getCurrentOffer'
@@ -15,7 +15,7 @@ class InsomniaPromo2014(object):
 
 	@staticmethod
 	def _ProcessPatterns(Patterns):
-		return [re.compile(Pattern) for Pattern in Patterns]
+		return [re.compile(Pattern, re.IGNORECASE) for Pattern in Patterns]
 
 	@staticmethod
 	def _Match(Reply, Patterns):
@@ -65,8 +65,11 @@ class SummerPromo2014(object):
 		Parser.feed(Reply)
 		return Parser.FoundPattern
 			
+class LateWinterPromo2015(InsomniaPromo2014):
+	SourceURL = 'http://www.gog.com/doublesomnia/getdeals'
+	Delay = 10.0	#10 seconds
 
-class PromoWarner(SummerPromo2014):
+class PromoWarner(LateWinterPromo2015):
 	AlarmURL = "http://www.youtube.com/watch?v=FoX7vd30zq8"
 	def __init__(self, Patterns):
 		self.PatternList = self._ProcessPatterns(Patterns)
