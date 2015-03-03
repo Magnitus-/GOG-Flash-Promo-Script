@@ -46,15 +46,35 @@ class InsomniaPromo(object):
         self.delay = 10.0  # 10 seconds
         self.foundPattern = ""
         self.alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
+        self.games = []
+        self.prevGames = []
 
-    def watch(self, patterns, delay):
+    def watchNewGames(self):
+        while True:
+            if VERBAL:
+                print("\nWatching for new games")
+
+            reply = self._pollServer()
+            if not len(reply):
+                continue
+
+            if (not len(self.prevGames)):  # First run
+                self.prevGames = self.games
+            elif (self.games[0] != self.prevGames[0] or
+                    self.games[1] != self.prevGames[1]):
+                self.prevGames = self.games
+                self._newGamesAlert()
+
+            time.sleep(self.delay)
+
+    def watchPatterns(self, patterns, delay):
         self.patternList = self._processPatterns(patterns)
         self.delay = delay
 
-        if VERBAL:
-            print("Ready to poll the GOG server.")
-
         while True:
+            if VERBAL:
+                print("\nWatching for games that match the pattern")
+
             reply = self._pollServer()
             if not len(reply):
                 continue
@@ -67,6 +87,13 @@ class InsomniaPromo(object):
 
             time.sleep(self.delay)
 
+    def _newGamesAlert(self):
+        if VERBAL:
+            print("New games!")
+            print("The script will now sound the alarm!")
+
+        webbrowser.open(self.alarmUrl, new=2)
+
     def _found(self):
         if VERBAL:
             print("Found \"{0}\"!".format(self._getFoundPattern()))
@@ -76,9 +103,8 @@ class InsomniaPromo(object):
 
         if VERBAL:
             print("Script will now end. Please, "
-                    "remove the game from the PATTERNS list "
-                    "if you bought it and restart the script.")
-        return
+                  "remove the game from the PATTERNS list "
+                  "if you bought it and restart the script.")
 
     def _notFound(self):
         if VERBAL:
@@ -90,7 +116,7 @@ class InsomniaPromo(object):
 
     def _pollServer(self):
         if VERBAL:
-                print("Polling the GOG server...")
+                print(".....................................................")
         try:
             req = urllib2.Request(url=self.sourceUrl)
             descriptor = urllib2.urlopen(req)
@@ -100,9 +126,9 @@ class InsomniaPromo(object):
             return ""
 
         s = str(descriptor.read())
-        games = self._getCurrentGames(s)
-        print "Seasoned: {0}".format(games[0])
-        print "Fresh: {0}\n".format(games[1])
+        self.games = self._getCurrentGames(s)
+        print "Seasoned: {0}".format(self.games[0])
+        print "Fresh: {0}\n".format(self.games[1])
 
         return s
 
@@ -116,7 +142,8 @@ class InsomniaPromo(object):
             title = strs[i].find(TITLE)
             start = strs[i].find("\"", title + len(TITLE))
             end = strs[i].find("\"", start + 1)
-            currentGames.append(strs[i][start + 1: end])
+            name = strs[i][start + 1: end].decode("unicode-escape")
+            currentGames.append(name)
 
         return currentGames
 
@@ -134,6 +161,20 @@ class InsomniaPromo(object):
         return self.foundPattern
 
 if __name__ == '__main__':
-    patterns = loadPatternFromFile()
     promo = InsomniaPromo("http://www.gog.com/doublesomnia/getdeals")
-    promo.watch(patterns, delay=10)
+
+    while (True):
+        print ("\nGOG Flash Promo Watcher")
+        print ("-------------------------------------")
+        print ("  1. Watch for new games")
+        print ("  2. Watch for games that match the patterns")
+        print ("  3. Quit\n")
+        answer = raw_input("Choose: ")
+
+        if answer == "1":
+            promo.watchNewGames()
+        elif answer == "2":
+            patterns = loadPatternFromFile()
+            promo.watchPatterns(patterns, delay=10)
+        elif answer == "3":
+            break
