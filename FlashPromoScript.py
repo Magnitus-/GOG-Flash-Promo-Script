@@ -24,6 +24,9 @@ def loadPatternFromFile():
 
     patternIndex = 0
 
+    print "Pattern List"
+    print "--------------------------"
+
     for line in lines:
         if line.endswith("\n"):
             line = line[:-1]
@@ -33,68 +36,71 @@ def loadPatternFromFile():
             print "{0:2}. {1}".format(patternIndex + 1, line)
             patternIndex += 1
 
-    print "\n"
+    print "-------------------------------------------------------"
     return patterns
 
 
-class InsomniaPromo2014(object):
-    SourceURL = 'http://www.gog.com/springinsomnia/ajax/getCurrentOffer'
-    Delay = 4.0  # 4 seconds
+class InsomniaPromo(object):
+    def __init__(self, sourceUrl):
+        self.sourceUrl = sourceUrl
+        self.delay = 10.0  # 10 seconds
+        self.foundPattern = ""
+        self.alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
 
-    @staticmethod
-    def _ProcessPatterns(Patterns):
-        return [re.compile(Pattern, re.IGNORECASE) for Pattern in Patterns]
+    def watch(self, patterns, delay):
+        self.patternList = self._processPatterns(patterns)
+        self.delay = delay
 
-    @staticmethod
-    def _Match(Reply, Patterns):
-        for Pattern in Patterns:
-            Match = Pattern.search(Reply)
-            if Match:
-                return True
-        return False
-
-
-class LateWinterPromo2015(InsomniaPromo2014):
-    SourceURL = 'http://www.gog.com/doublesomnia/getdeals'
-    Delay = 10.0    # 10 seconds
-
-
-class PromoWarner(LateWinterPromo2015):
-    AlarmURL = "http://www.youtube.com/watch?v=FoX7vd30zq8"
-
-    def __init__(self, Patterns):
-        self.PatternList = self._ProcessPatterns(Patterns)
-
-    def Warn(self):
         if VERBAL:
             print("Ready to poll the GOG server.")
+
         while True:
             if VERBAL:
                 print("Polling the GOG server...")
             try:
-                req = urllib2.Request(url=self.SourceURL)
-                Descriptor = urllib2.urlopen(req)
+                req = urllib2.Request(url=self.sourceUrl)
+                descriptor = urllib2.urlopen(req)
             except ExceptionClass:
                 print(sys.exc_info()[:2])
-                time.sleep(self.Delay)
+                time.sleep(self.delay)
                 continue
-            Reply = str(Descriptor.read())
-            if self._Match(Reply, self.PatternList):
+
+            reply = str(descriptor.read())
+
+            if self._match(reply, self.patternList):
                 if VERBAL:
-                    print("Game found! The script will now sound the alarm!")
-                webbrowser.open(self.AlarmURL, new=2)
+                    print("Found \"{0}\"!".format(self._getFoundPattern()))
+                    print("The script will now sound the alarm!")
+
+                webbrowser.open(self.alarmUrl, new=2)
+
                 if VERBAL:
                     print("Script will now end. Please, "
                           "remove the game from the PATTERNS list "
                           "if you bought it and restart the script.")
                 return
             elif VERBAL:
-                print("No game found. Will now sleep for " + str(self.Delay)
+                print("No game found. Will now sleep for " + str(self.delay)
                       + " seconds.")
-            time.sleep(self.Delay)
+            time.sleep(self.delay)
 
+    def _processPatterns(self, patterns):
+        return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
 
-if __name__=='__main__':
+    def _match(self, reply, patterns):
+        self.foundPattern = ""
+
+        for pattern in patterns:
+            Match = pattern.search(reply)
+            if Match:
+                self.foundPattern = pattern.pattern
+                return True
+        return False
+
+    def _getFoundPattern(self):
+        return self.foundPattern
+
+if __name__ == '__main__':
     patterns = loadPatternFromFile()
-    Warner = PromoWarner(patterns)
-    Warner.Warn()
+    promo = InsomniaPromo("http://www.gog.com/doublesomnia/getdeals")
+    promo.watch(patterns, delay=10)
