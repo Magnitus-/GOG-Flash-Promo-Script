@@ -55,37 +55,69 @@ class InsomniaPromo(object):
             print("Ready to poll the GOG server.")
 
         while True:
-            if VERBAL:
-                print("Polling the GOG server...")
-            try:
-                req = urllib2.Request(url=self.sourceUrl)
-                descriptor = urllib2.urlopen(req)
-            except ExceptionClass:
-                print(sys.exc_info()[:2])
-                time.sleep(self.delay)
+            reply = self._pollServer()
+            if not len(reply):
                 continue
 
-            reply = str(descriptor.read())
-
             if self._match(reply, self.patternList):
-                if VERBAL:
-                    print("Found \"{0}\"!".format(self._getFoundPattern()))
-                    print("The script will now sound the alarm!")
+                self._found()
+            else:
+                self._notFound()
 
-                webbrowser.open(self.alarmUrl, new=2)
-
-                if VERBAL:
-                    print("Script will now end. Please, "
-                          "remove the game from the PATTERNS list "
-                          "if you bought it and restart the script.")
-                return
-            elif VERBAL:
-                print("No game found. Will now sleep for " + str(self.delay)
-                      + " seconds.")
             time.sleep(self.delay)
+
+    def _found(self):
+        if VERBAL:
+            print("Found \"{0}\"!".format(self._getFoundPattern()))
+            print("The script will now sound the alarm!")
+
+        webbrowser.open(self.alarmUrl, new=2)
+
+        if VERBAL:
+            print("Script will now end. Please, "
+                    "remove the game from the PATTERNS list "
+                    "if you bought it and restart the script.")
+        return
+
+    def _notFound(self):
+        if VERBAL:
+            print("No game found. Will now sleep for " + str(self.delay)
+                  + " seconds.")
 
     def _processPatterns(self, patterns):
         return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
+
+    def _pollServer(self):
+        if VERBAL:
+                print("Polling the GOG server...")
+        try:
+            req = urllib2.Request(url=self.sourceUrl)
+            descriptor = urllib2.urlopen(req)
+        except ExceptionClass:
+            print(sys.exc_info()[:2])
+            time.sleep(self.delay)
+            return ""
+
+        s = str(descriptor.read())
+        games = self._getCurrentGames(s)
+        print "Seasoned: {0}".format(games[0])
+        print "Fresh: {0}\n".format(games[1])
+
+        return s
+
+    def _getCurrentGames(self, s):
+        TITLE = "\"title\":"
+        currentGames = []
+
+        strs = s.split("\"fresh\":{\"id\"")
+
+        for i in range(2):
+            title = strs[i].find(TITLE)
+            start = strs[i].find("\"", title + len(TITLE))
+            end = strs[i].find("\"", start + 1)
+            currentGames.append(strs[i][start + 1: end])
+
+        return currentGames
 
     def _match(self, reply, patterns):
         self.foundPattern = ""
