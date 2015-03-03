@@ -1,25 +1,25 @@
-Apotheon
-Baldur's Gate
-Defender of the Crown
-Dreamfall
-Gabriel Knight
-Heroes of Might and Magic
-Hot Tin Roof
-Icewind Dale
-Infested Planet
-Krondor
-Legend of Heroes
-Lords of Xulima
-Master of Orion
-Miss Take
-Mulana
-Nancy Drew
-Outcast
-Pier Solar
-Realms of Arkania
-Sacrifice
-Space Rangers
-Splinter Cell
-Star Wars
-Wings
-YS
+apotheon
+baldur's gate
+defender of the crown
+dreamfall
+gabriel knight
+heroes of might and magic
+hot tin roof
+icewind dale
+infested planet
+krondor
+legend of heroes
+lords of xulima
+master of orion
+miss Take
+mulana
+nancy drew
+outcast
+pier solar
+realms of arkania
+sacrifice
+space rangers
+splinter cell
+star wars
+wings
+ys
