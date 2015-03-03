@@ -61,6 +61,7 @@ class InsomniaPromo(object):
 
             if self._match(reply, self.patternList):
                 self._found()
+                return
             else:
                 self._notFound()
 
