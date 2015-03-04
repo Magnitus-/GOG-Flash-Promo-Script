@@ -1,0 +1,36 @@
+GOG Flash Promo Script
+======================
+
+Script to that warns you when important updates occur during GOG's flash promo.
+
+It is meant to be used during a GOG flash promo and will be updated to deal with the specifics for each promo.
+
+Requirements
+------------
+
+1) Python (2.7 or 3.x): https://www.python.org/
+2) A browser
+
+Executing the script
+--------------------
+
+In Windows, you can simply double-click on the script after installing Python.
+
+Alternatively, you can type the following command on the command line (from the script's directory): python FlashPromoScript.py
+
+Usage
+-----
+
+- Warning on game change
+
+Execute the script and select option 1. An alarm will be triggered in a browser tab (will play an alarm youtube video) whenever the a game on promotion changes.
+
+- Warning for specific games on promo
+
+Edit the patterns.txt file to contain the titles of all the games you are interested in (one title per line).
+
+Then, execute the script and select option 2. An alarm will be triggered in a browser tab (will play an alarm youtube video) whenever one of the games you are interested in appears on promotion.
+
+Once a game you a looking for is found and the alarm is triggered, the script will exit, which will allow you to edit the patterns.txt file (and remove the game's title from the file if you got it) and start the script anew.
+
+
