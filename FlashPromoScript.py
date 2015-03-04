@@ -11,11 +11,15 @@ if sys.version_info.major == 2:
     import urllib2 as urllib2
     ExceptionClass = urllib2.URLError
     userInput = raw_input
+    def Convert(Input):
+        return str(Input)
 else:
     import urllib.request as urllib2
     import urllib.error
     ExceptionClass = urllib.error.URLError
     userInput = input
+    def Convert(Input):
+        return str(Input, encoding='utf-8')
 
 VERBAL = True  # Set to True if you want feedback
 ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
@@ -163,7 +167,7 @@ class CurrentPromo(InsomniaPromo):
             time.sleep(self.delay)
             return ""
 
-        body = str(descriptor.read())
+        body = Convert(descriptor.read())
         self.games = self._getCurrentGames(body)
         print ("Seasoned: "+self.games[0])
         print ("Fresh: "+self.games[1]+"\n")
@@ -217,4 +221,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception:
+        print(sys.exc_info()[:2])
         ask("")
