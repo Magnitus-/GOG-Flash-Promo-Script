@@ -1,4 +1,4 @@
-# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix
+# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix; Jonathan Markevich
 import time
 import re
 import webbrowser
@@ -24,16 +24,19 @@ else:
 VERBAL = True  # Set to True if you want feedback
 ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
 FILE_ALARM = False  #Triggers alarm from a downloaded file instead of a youtube video
+BATCH_ALARM = True #Executes a batch file instead of the above alarms
 
 class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
     SoundFile = "Alarm.wav"
-    
+    batchPath = "~/pushprowl.sh"
+
     @staticmethod
     def _soundAlarm():
         SoundFile = InsomniaPromo.SoundFile
         SoundFileUrl = InsomniaPromo.SoundFileUrl
+   	batchPath = InsomniaPromo.batchPath
         if FILE_ALARM:
             if not(os.path.exists(SoundFile)):
                 try:
@@ -52,6 +55,8 @@ class InsomniaPromo(object):
                 subprocess.call(["afplay",SoundFile])
             else:
                 os.system("start "+SoundFile)
+        elif BATCH_ALARM:
+            os.system(batchPath)
         else:
             webbrowser.open(InsomniaPromo.alarmUrl, new=2)
     
