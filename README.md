@@ -1,15 +1,15 @@
 GOG Flash Promo Script
 ======================
 
-Script to that warns you when important updates occur during GOG's flash promo.
+Script that warns you when important updates occur during GOG's flash promo.
 
 It is meant to be used during a GOG flash promo and will be updated to deal with the specifics for each promo.
 
 Requirements
 ------------
 
-1) Python (2.7 or 3.x): https://www.python.org/
-2) A browser
+- Python (2.7 or 3.x): https://www.python.org/
+- A browser
 
 Executing the script
 --------------------
