@@ -73,34 +73,7 @@ class InsomniaPromo(object):
     
         print ("-------------------------------------------------------")
         return patterns
-
-
-class CurrentPromo(InsomniaPromo):
-    def __init__(self, sourceUrl, delay):
-        self.sourceUrl = sourceUrl
-        self.delay = delay
-        self.foundPattern = ""
-        self.games = []
-        self.prevGames = []
-
-    def watchNewGames(self):
-        while True:
-            if VERBAL:
-                print("\nWatching for new games")
-
-            reply = self._pollServer()
-            if not len(reply):
-                continue
-
-            if (not len(self.prevGames)):  # First run
-                self.prevGames = self.games
-            elif (self.games[0] != self.prevGames[0] or
-                    self.games[1] != self.prevGames[1]):
-                self.prevGames = self.games
-                self._newGamesAlert()
-
-            time.sleep(self.delay)
-
+        
     def watchPatterns(self, patterns):
         self.patternList = self._processPatterns(patterns)
 
@@ -119,6 +92,35 @@ class CurrentPromo(InsomniaPromo):
                 self._notFound()
 
             time.sleep(self.delay)
+            
+    def watchNewGames(self):
+        while True:
+            if VERBAL:
+                print("\nWatching for new games")
+
+            reply = self._pollServer()
+            if not len(reply):
+                continue
+
+            if (not len(self.prevGames)):  # First run
+                self.prevGames = self.games
+            else:
+                PreviousSet = set(self.prevGames)
+                CurrentSet = set(self.games)
+                if not(PreviousSet.issubset(CurrentSet) and PreviousSet.issuperset(CurrentSet)):
+                    self.prevGames = self.games
+                    self._newGamesAlert()
+
+            time.sleep(self.delay)
+
+
+class CurrentPromo(InsomniaPromo):
+    def __init__(self, sourceUrl, delay):
+        self.sourceUrl = sourceUrl
+        self.delay = delay
+        self.foundPattern = ""
+        self.games = []
+        self.prevGames = []
 
     def _newGamesAlert(self):
         if VERBAL:
@@ -160,8 +162,8 @@ class CurrentPromo(InsomniaPromo):
 
         body = str(descriptor.read())
         self.games = self._getCurrentGames(body)
-        print ("Seasoned: {0}".format(self.games[0]))
-        print ("Fresh: {0}\n".format(self.games[1]))
+        print ("Seasoned: "+self.games[0])#print ("Seasoned: {0}".format(self.games[0]))
+        print ("Fresh: "+self.games[1]+"\n")#print ("Fresh: {0}\n".format(self.games[1]))
 
         return body
 
