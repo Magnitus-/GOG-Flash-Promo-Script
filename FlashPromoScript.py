@@ -17,36 +17,39 @@ else:
 
 VERBAL = True  # Set to True if you want feedback
 
-def loadPatterns(filename):
-    patterns = []
-
-    with open(filename) as f:
-        lines = f.readlines()
-
-    patternIndex = 0
-
-    print ("Pattern List")
-    print ("--------------------------")
-
-    for line in lines:
-        if line.endswith("\n"):
-            line = line[:-1]
-
-        if len(line):
-            patterns.append(line)
-            print ("{0:2}. {1}".format(patternIndex + 1, line))
-            patternIndex += 1
-
-    print ("-------------------------------------------------------")
-    return patterns
-
-
 class InsomniaPromo(object):
+    alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
+    
+    @staticmethod
+    def loadPatterns(filename):
+        patterns = []
+    
+        with open(filename) as f:
+            lines = f.readlines()
+    
+        patternIndex = 0
+    
+        print ("Pattern List")
+        print ("--------------------------")
+    
+        for line in lines:
+            if line.endswith("\n"):
+                line = line[:-1]
+    
+            if len(line):
+                patterns.append(line)
+                print ("{0:2}. {1}".format(patternIndex + 1, line))
+                patternIndex += 1
+    
+        print ("-------------------------------------------------------")
+        return patterns
+
+
+class CurrentPromo(InsomniaPromo):
     def __init__(self, sourceUrl, delay):
         self.sourceUrl = sourceUrl
         self.delay = delay
         self.foundPattern = ""
-        self.alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
         self.games = []
         self.prevGames = []
 
@@ -157,7 +160,7 @@ def ask(message):
 
 
 def main():
-    promo = InsomniaPromo(sourceUrl="http://www.gog.com/doublesomnia/getdeals", delay=10.0)
+    promo = CurrentPromo(sourceUrl="http://www.gog.com/doublesomnia/getdeals", delay=10.0)
 
     while (True):
         print ("\nGOG Flash Promo Watcher")
@@ -170,7 +173,7 @@ def main():
         if answer == "1":
             promo.watchNewGames()
         elif answer == "2":
-            patterns = loadPatterns("patterns.txt")
+            patterns = CurrentPromo.loadPatterns("patterns.txt")
             promo.watchPatterns(patterns)
         elif answer == "3":
             break
