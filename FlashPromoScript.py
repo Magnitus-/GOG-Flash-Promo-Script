@@ -1,27 +1,25 @@
-# Author: Eric Vallee (eric_vallee2003@yahoo.ca)
-# Modified by Stephen Phoenix
+# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix
 import time
 import re
 import webbrowser
 import sys
 
 if sys.version_info.major == 2:
-    PYTHON2 = True
     import urllib2 as urllib2
     ExceptionClass = urllib2.URLError
+    userInput = raw_input
 else:
-    PYTHON2 = False
     import urllib.request as urllib2
     import urllib.error
     ExceptionClass = urllib.error.URLError
+    userInput = input
 
 VERBAL = True  # Set to True if you want feedback
 
-
-def loadPatternFromFile():
+def loadPatterns(filename):
     patterns = []
 
-    with open("patterns.txt") as f:
+    with open(filename) as f:
         lines = f.readlines()
 
     patternIndex = 0
@@ -43,9 +41,9 @@ def loadPatternFromFile():
 
 
 class InsomniaPromo(object):
-    def __init__(self, sourceUrl):
+    def __init__(self, sourceUrl, delay):
         self.sourceUrl = sourceUrl
-        self.delay = 10.0  # 10 seconds
+        self.delay = delay
         self.foundPattern = ""
         self.alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
         self.games = []
@@ -69,9 +67,8 @@ class InsomniaPromo(object):
 
             time.sleep(self.delay)
 
-    def watchPatterns(self, patterns, delay):
+    def watchPatterns(self, patterns):
         self.patternList = self._processPatterns(patterns)
-        self.delay = delay
 
         while True:
             if VERBAL:
@@ -164,16 +161,12 @@ class InsomniaPromo(object):
 
 
 def ask(message):
-    if PYTHON2:
-        answer = raw_input(message)
-    else:
-        answer = input(message)
-
+    answer = userInput(message)
     return answer
 
 
 def main():
-    promo = InsomniaPromo("http://www.gog.com/doublesomnia/getdeals")
+    promo = InsomniaPromo(sourceUrl="http://www.gog.com/doublesomnia/getdeals", delay=10.0)
 
     while (True):
         print ("\nGOG Flash Promo Watcher")
@@ -186,8 +179,8 @@ def main():
         if answer == "1":
             promo.watchNewGames()
         elif answer == "2":
-            patterns = loadPatternFromFile()
-            promo.watchPatterns(patterns, delay=10)
+            patterns = loadPatterns("patterns.txt")
+            promo.watchPatterns(patterns)
         elif answer == "3":
             break
 
