@@ -3,6 +3,7 @@ import time
 import re
 import webbrowser
 import sys
+import json
 
 if sys.version_info.major == 2:
     import urllib2 as urllib2
@@ -124,26 +125,16 @@ class InsomniaPromo(object):
             time.sleep(self.delay)
             return ""
 
-        s = str(descriptor.read())
-        self.games = self._getCurrentGames(s)
+        body = str(descriptor.read())
+        self.games = self._getCurrentGames(body)
         print ("Seasoned: {0}".format(self.games[0]))
         print ("Fresh: {0}\n".format(self.games[1]))
 
-        return s
+        return body
 
-    def _getCurrentGames(self, s):
-        TITLE = "\"title\":"
-        currentGames = []
-
-        strs = s.split("\"fresh\":{\"id\"")
-
-        for i in range(2):
-            title = strs[i].find(TITLE)
-            start = strs[i].find("\"", title + len(TITLE))
-            end = strs[i].find("\"", start + 1)
-            name = strs[i][start + 1: end]
-            currentGames.append(name)
-
+    def _getCurrentGames(self, body):
+        replyDict = json.loads(body)
+        currentGames = [replyDict['oldschool']['title'], replyDict['fresh']['title']]
         return currentGames
 
     def _match(self, reply, patterns):
