@@ -18,7 +18,8 @@ else:
     userInput = input
 
 VERBAL = True  # Set to True if you want feedback
-FILE_ALARM = False
+ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
+FILE_ALARM = False  #Triggers alarm from a downloaded file instead of a youtube video
 
 class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
@@ -67,8 +68,11 @@ class InsomniaPromo(object):
                 line = line[:-1]
     
             if len(line):
+                if ESCAPE:
+                    for Special in ('.', '^', '$', '*', '+', '?', '\\', '{', '}', '[', ']', '(', ')', '|'):
+                        line = line.replace(Special, "\\"+Special)
                 patterns.append(line)
-                print ("{0:2}. {1}".format(patternIndex + 1, line))
+                print(line)
                 patternIndex += 1
     
         print ("-------------------------------------------------------")
@@ -131,7 +135,7 @@ class CurrentPromo(InsomniaPromo):
 
     def _found(self):
         if VERBAL:
-            print("Found \"{0}\"!".format(self._getFoundPattern()))
+            print("Found \""+self._getFoundPattern()+"\"!")
             print("The script will now sound the alarm!")
 
         self._soundAlarm()
@@ -143,8 +147,7 @@ class CurrentPromo(InsomniaPromo):
 
     def _notFound(self):
         if VERBAL:
-            print("No game found. Will now sleep for " + str(self.delay)
-                  + " seconds.")
+            print("No game found. Will now sleep for " + str(self.delay) + " seconds.")
 
     def _processPatterns(self, patterns):
         return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
@@ -162,8 +165,8 @@ class CurrentPromo(InsomniaPromo):
 
         body = str(descriptor.read())
         self.games = self._getCurrentGames(body)
-        print ("Seasoned: "+self.games[0])#print ("Seasoned: {0}".format(self.games[0]))
-        print ("Fresh: "+self.games[1]+"\n")#print ("Fresh: {0}\n".format(self.games[1]))
+        print ("Seasoned: "+self.games[0])
+        print ("Fresh: "+self.games[1]+"\n")
 
         return body
 
