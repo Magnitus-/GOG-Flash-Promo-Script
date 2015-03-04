@@ -27,13 +27,7 @@ Execute the script and select option 1. An alarm will be triggered in a browser 
 
 - Warning for specific games on promo
 
-In the script's directory, create a file called patterns.txt that will contain a unique part of titles for all the games you are interested in (one title per line).
-
-Example of a patterns.txt file:
-Neverwinter Nights
-Icewind Dale
-Master of Orion
-Master of Magic
+In the script's directory, create a file called patterns.txt that the titles for all the games you are interested in (one title per line).
 
 Then, execute the script and select option 2. An alarm will be triggered in a browser tab (will play an alarm youtube video) whenever one of the games you are interested in appears on promotion.
 
