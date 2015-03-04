@@ -142,7 +142,7 @@ class InsomniaPromo(object):
             title = strs[i].find(TITLE)
             start = strs[i].find("\"", title + len(TITLE))
             end = strs[i].find("\"", start + 1)
-            name = strs[i][start + 1: end].decode("unicode-escape")
+            name = strs[i][start + 1: end]
             currentGames.append(name)
 
         return currentGames
