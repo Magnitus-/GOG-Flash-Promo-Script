@@ -6,9 +6,11 @@ import webbrowser
 import sys
 
 if sys.version_info.major == 2:
+    PYTHON2 = True
     import urllib2 as urllib2
     ExceptionClass = urllib2.URLError
 else:
+    PYTHON2 = False
     import urllib.request as urllib2
     import urllib.error
     ExceptionClass = urllib.error.URLError
@@ -24,8 +26,8 @@ def loadPatternFromFile():
 
     patternIndex = 0
 
-    print "Pattern List"
-    print "--------------------------"
+    print ("Pattern List")
+    print ("--------------------------")
 
     for line in lines:
         if line.endswith("\n"):
@@ -33,10 +35,10 @@ def loadPatternFromFile():
 
         if len(line):
             patterns.append(line)
-            print "{0:2}. {1}".format(patternIndex + 1, line)
+            print ("{0:2}. {1}".format(patternIndex + 1, line))
             patternIndex += 1
 
-    print "-------------------------------------------------------"
+    print ("-------------------------------------------------------")
     return patterns
 
 
@@ -127,8 +129,8 @@ class InsomniaPromo(object):
 
         s = str(descriptor.read())
         self.games = self._getCurrentGames(s)
-        print "Seasoned: {0}".format(self.games[0])
-        print "Fresh: {0}\n".format(self.games[1])
+        print ("Seasoned: {0}".format(self.games[0]))
+        print ("Fresh: {0}\n".format(self.games[1]))
 
         return s
 
@@ -160,7 +162,17 @@ class InsomniaPromo(object):
     def _getFoundPattern(self):
         return self.foundPattern
 
-if __name__ == '__main__':
+
+def ask(message):
+    if PYTHON2:
+        answer = raw_input(message)
+    else:
+        answer = input(message)
+
+    return answer
+
+
+def main():
     promo = InsomniaPromo("http://www.gog.com/doublesomnia/getdeals")
 
     while (True):
@@ -169,7 +181,7 @@ if __name__ == '__main__':
         print ("  1. Watch for new games")
         print ("  2. Watch for games that match the patterns")
         print ("  3. Quit\n")
-        answer = raw_input("Choose: ")
+        answer = ask("Choose: ")
 
         if answer == "1":
             promo.watchNewGames()
@@ -178,3 +190,6 @@ if __name__ == '__main__':
             promo.watchPatterns(patterns, delay=10)
         elif answer == "3":
             break
+
+if __name__ == '__main__':
+    main()
