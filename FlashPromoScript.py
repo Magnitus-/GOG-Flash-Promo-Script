@@ -3,6 +3,8 @@ import time
 import re
 import webbrowser
 import sys
+import os
+import subprocess
 import json
 
 if sys.version_info.major == 2:
@@ -16,9 +18,37 @@ else:
     userInput = input
 
 VERBAL = True  # Set to True if you want feedback
+FILE_ALARM = False
 
 class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
+    SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
+    SoundFile = "Alarm.wav"
+    
+    @staticmethod
+    def _soundAlarm():
+        SoundFile = InsomniaPromo.SoundFile
+        SoundFileUrl = InsomniaPromo.SoundFileUrl
+        if FILE_ALARM:
+            if not(os.path.exists(SoundFile)):
+                try:
+                    req = urllib2.Request(url=SoundFileUrl)
+                    descriptor = urllib2.urlopen(req)
+                except ExceptionClass:
+                    print(sys.exc_info()[:2])
+                    time.sleep(self.delay)
+                    return
+                soundFile = open(SoundFile,'wb')
+                soundFile.write(descriptor.read())
+                soundFile.close()
+            if sys.platform == 'linux2':
+                subprocess.call(["xdg-open", SoundFile])
+            elif sys.platform == 'darwin':
+                subprocess.call(["afplay",SoundFile])
+            else:
+                os.system("start "+SoundFile)
+        else:
+            webbrowser.open(InsomniaPromo.alarmUrl, new=2)
     
     @staticmethod
     def loadPatterns(filename):
@@ -95,14 +125,14 @@ class CurrentPromo(InsomniaPromo):
             print("New games!")
             print("The script will now sound the alarm!")
 
-        webbrowser.open(self.alarmUrl, new=2)
+        self._soundAlarm()
 
     def _found(self):
         if VERBAL:
             print("Found \"{0}\"!".format(self._getFoundPattern()))
             print("The script will now sound the alarm!")
 
-        webbrowser.open(self.alarmUrl, new=2)
+        self._soundAlarm()
 
         if VERBAL:
             print("Script will now end. Please, "
