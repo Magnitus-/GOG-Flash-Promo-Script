@@ -52,7 +52,7 @@ class GameInfo(object):
 
     def __str__(self):
         return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})".format(
-                self.title, self.discount, self.price, self.fullPrice))
+                self.getSafeTitle(), self.discount, self.price, self.fullPrice))
 
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
