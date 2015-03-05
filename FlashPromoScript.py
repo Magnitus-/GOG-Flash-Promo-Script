@@ -25,11 +25,44 @@ VERBAL = True  # Set to True if you want feedback
 ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
 FILE_ALARM = False  #Triggers alarm from a downloaded file instead of a youtube video
 
+
+class GameInfo(object):
+    def __init__(self, title, price, fullPrice, discount):
+        self.title = title
+        self.price = price
+        self.fullPrice = fullPrice
+        self.discount = discount
+
+    def __repr__(self):
+        return "GameInfo:{0},{1},{2},{3}".format(self.title, self.price,
+                                                 self.fullPrice, self.discount)
+
+    def __eq__(self, other):
+        if isinstance(other, GameInfo):
+            return self.title == other.title
+        else:
+            return False
+
+    def __ne__(self, other):
+        if isinstance(other, GameInfo):
+            return not self.__eq__(GameInfo)
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
+    def __str__(self):
+        return ("{0: <30}    -{1: <3}%  ${2: <5} (${3})".format(
+                self.title, self.discount, self.price, self.fullPrice))
+
+    def getSafeTitle(self):
+        return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
+
+
 class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
     SoundFile = "Alarm.wav"
-    
+
     @staticmethod
     def _soundAlarm():
         SoundFile = InsomniaPromo.SoundFile
@@ -41,8 +74,8 @@ class InsomniaPromo(object):
                     descriptor = urllib2.urlopen(req)
                 except ExceptionClass:
                     print(sys.exc_info()[:2])
-                    time.sleep(self.delay)
                     return
+
                 soundFile = open(SoundFile,'wb')
                 soundFile.write(descriptor.read())
                 soundFile.close()
@@ -54,23 +87,27 @@ class InsomniaPromo(object):
                 os.system("start "+SoundFile)
         else:
             webbrowser.open(InsomniaPromo.alarmUrl, new=2)
-    
+
     @staticmethod
     def loadPatterns(filename):
         patterns = []
-    
-        with open(filename) as f:
-            lines = f.readlines()
-    
+
+        try:
+            with open(filename) as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            print ('Error! "{0}" not found'.format(filename))
+            raise e
+
         patternIndex = 0
-    
+
         print ("Pattern List")
         print ("--------------------------")
-    
+
         for line in lines:
             if line.endswith("\n"):
                 line = line[:-1]
-    
+
             if len(line):
                 if ESCAPE:
                     for Special in ('.', '^', '$', '*', '+', '?', '\\', '{', '}', '[', ']', '(', ')', '|'):
@@ -78,10 +115,10 @@ class InsomniaPromo(object):
                 patterns.append(line)
                 print(line)
                 patternIndex += 1
-    
+
         print ("-------------------------------------------------------")
         return patterns
-        
+
     def watchPatterns(self, patterns):
         self.patternList = self._processPatterns(patterns)
 
@@ -93,6 +130,11 @@ class InsomniaPromo(object):
             if not len(reply):
                 continue
 
+            # Update and display current games
+            self.games = self._getCurrentGames(reply)
+            self._displayCurrentGames()
+
+            # Check if current games match the patterns
             if self._match(reply, self.patternList):
                 self._found()
                 return
@@ -100,7 +142,7 @@ class InsomniaPromo(object):
                 self._notFound()
 
             time.sleep(self.delay)
-            
+
     def watchNewGames(self):
         while True:
             if VERBAL:
@@ -110,6 +152,11 @@ class InsomniaPromo(object):
             if not len(reply):
                 continue
 
+            # Update and display current games
+            self.games = self._getCurrentGames(reply)
+            self._displayCurrentGames()
+
+            # Check if one of current games has been changed
             if (not len(self.prevGames)):  # First run
                 self.prevGames = self.games
             else:
@@ -168,15 +215,25 @@ class CurrentPromo(InsomniaPromo):
             return ""
 
         body = Convert(descriptor.read())
-        self.games = self._getCurrentGames(body)
-        print ("Seasoned: "+self.games[0])
-        print ("Fresh: "+self.games[1]+"\n")
-
         return body
+
+    def _displayCurrentGames(self):
+        try:
+            print ("Seasoned: {0}".format(self.games[0]))
+            print ("Fresh:    {0}".format(self.games[1]))
+        except Exception:
+            print ("Error displaying game title!")
+
+    def _createGameInfo(self, replyDict, root):
+        title = replyDict[root]['title']
+        price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
+        discount = replyDict[root]['discount']
+        return GameInfo(title, price, fullPrice, discount)
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
-        currentGames = [replyDict['oldschool']['title'], replyDict['fresh']['title']]
+        currentGames = [self._createGameInfo(replyDict, 'oldschool'),
+                        self._createGameInfo(replyDict, 'fresh')]
         return currentGames
 
     def _match(self, reply, patterns):
