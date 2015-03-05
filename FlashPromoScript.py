@@ -33,6 +33,7 @@ class GameInfo(object):
         self.price = price
         self.fullPrice = fullPrice
         self.discount = discount
+		
 
     def __repr__(self):
         return "GameInfo:{0},{1},{2},{3}".format(self.title, self.price,
@@ -88,7 +89,7 @@ class InsomniaPromo(object):
                 subprocess.call(["afplay",SoundFile])
             else:
                 os.system("start "+SoundFile)
-        elif BATCH_ALARM:
+        elif BATCH_ALARM & os.path.exists(batchPath):
             os.system(batchPath)
         else:
             webbrowser.open(InsomniaPromo.alarmUrl, new=2)
@@ -210,7 +211,7 @@ class CurrentPromo(InsomniaPromo):
 
     def _pollServer(self):
         if VERBAL:
-             print(".....................................................")
+            print(".....................................................")
         try:
             req = urllib2.Request(url=self.sourceUrl)
             descriptor = urllib2.urlopen(req)
@@ -220,17 +221,6 @@ class CurrentPromo(InsomniaPromo):
             return ""
 
         body = Convert(descriptor.read())
-
-        self.games = self._getCurrentGames(body)
-        self.stock = self._getCurrentStock(body)
-        print ("Seasoned: "+self.games[0])
-        if VERBAL:
-            print (" ("+`self.stock[0]`+"/"+`self.stock[2]`+")")
-            
-        print ("Fresh: "+self.games[1])
-        if VERBAL:
-            print (" ("+`self.stock[1]`+"/"+`self.stock[3]`+")\n")
-			
         return body
 
     def _displayCurrentGames(self):
@@ -251,12 +241,6 @@ class CurrentPromo(InsomniaPromo):
         currentGames = [self._createGameInfo(replyDict, 'oldschool'),
                         self._createGameInfo(replyDict, 'fresh')]
         return currentGames
-
-    def _getCurrentStock(self, body):
-        replyDict = json.loads(body)
-        currentStock = [replyDict['oldschool']['stockLeft'],replyDict['fresh']['stockLeft'],
-           replyDict['oldschool']['stock'],replyDict['fresh']['stock'],]
-        return currentStock
 
     def _match(self, reply, patterns):
         self.foundPattern = ""
