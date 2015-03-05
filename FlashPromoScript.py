@@ -174,8 +174,14 @@ class CurrentPromo(InsomniaPromo):
 
         body = Convert(descriptor.read())
         self.games = self._getCurrentGames(body)
+        self.stock = self._getCurrentStock(body)
         print ("Seasoned: "+self.games[0])
-        print ("Fresh: "+self.games[1]+"\n")
+        if VERBAL:
+            print (" ("+`self.stock[0]`+"/"+`self.stock[2]`+")")
+            
+        print ("Fresh: "+self.games[1])
+        if VERBAL:
+            print (" ("+`self.stock[1]`+"/"+`self.stock[3]`+")\n")
 
         return body
 
@@ -183,6 +189,12 @@ class CurrentPromo(InsomniaPromo):
         replyDict = json.loads(body)
         currentGames = [replyDict['oldschool']['title'], replyDict['fresh']['title']]
         return currentGames
+
+    def _getCurrentStock(self, body):
+        replyDict = json.loads(body)
+        currentStock = [replyDict['oldschool']['stockLeft'],replyDict['fresh']['stockLeft'],
+           replyDict['oldschool']['stock'],replyDict['fresh']['stock'],]
+        return currentStock
 
     def _match(self, reply, patterns):
         self.foundPattern = ""
