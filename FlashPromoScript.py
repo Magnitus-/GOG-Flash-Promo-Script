@@ -51,7 +51,7 @@ class GameInfo(object):
         return hash(self.__repr__())
 
     def __str__(self):
-        return ("{0: <30}    -{1: <3}%  ${2: <5} (${3})".format(
+        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})".format(
                 self.title, self.discount, self.price, self.fullPrice))
 
     def getSafeTitle(self):
