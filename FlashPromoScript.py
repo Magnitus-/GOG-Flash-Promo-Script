@@ -30,13 +30,13 @@ class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
     SoundFile = "Alarm.wav"
-    batchPath = "~/pushprowl.sh"
+    batchPath = "./pushprowl.sh"
 
     @staticmethod
     def _soundAlarm():
         SoundFile = InsomniaPromo.SoundFile
         SoundFileUrl = InsomniaPromo.SoundFileUrl
-   	batchPath = InsomniaPromo.batchPath
+        batchPath = InsomniaPromo.batchPath
         if FILE_ALARM:
             if not(os.path.exists(SoundFile)):
                 try:
@@ -163,7 +163,7 @@ class CurrentPromo(InsomniaPromo):
 
     def _pollServer(self):
         if VERBAL:
-                print(".....................................................")
+             print(".....................................................")
         try:
             req = urllib2.Request(url=self.sourceUrl)
             descriptor = urllib2.urlopen(req)
