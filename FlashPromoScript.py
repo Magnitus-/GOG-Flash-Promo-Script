@@ -1,4 +1,4 @@
-# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix
+# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix; Jonathan Markevich
 import time
 import re
 import webbrowser
@@ -24,14 +24,17 @@ else:
 VERBAL = True  # Set to True if you want feedback
 ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
 FILE_ALARM = False  #Triggers alarm from a downloaded file instead of a youtube video
+BATCH_ALARM = True #Executes a batch file instead of the above alarms
 
 
 class GameInfo(object):
-    def __init__(self, title, price, fullPrice, discount):
+    def __init__(self, title, price, fullPrice, discount, stock, stockLeft):
         self.title = title
         self.price = price
         self.fullPrice = fullPrice
         self.discount = discount
+        self.stock = stock
+        self.stockLeft = stockLeft
 
     def __repr__(self):
         return "GameInfo:{0},{1},{2},{3}".format(self.title, self.price,
@@ -51,8 +54,8 @@ class GameInfo(object):
         return hash(self.__repr__())
 
     def __str__(self):
-        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})".format(
-                self.getSafeTitle(), self.discount, self.price, self.fullPrice))
+        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})  {5}/{4}".format(
+                self.getSafeTitle(), self.discount, self.price, self.fullPrice, self.stock, self.stockLeft))
 
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
@@ -62,11 +65,13 @@ class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
     SoundFile = "Alarm.wav"
-
+    batchPath = "./AlarmScript.sh"
+	
     @staticmethod
     def _soundAlarm():
         SoundFile = InsomniaPromo.SoundFile
         SoundFileUrl = InsomniaPromo.SoundFileUrl
+        batchPath = InsomniaPromo.batchPath
         if FILE_ALARM:
             if not(os.path.exists(SoundFile)):
                 try:
@@ -85,6 +90,8 @@ class InsomniaPromo(object):
                 subprocess.call(["afplay",SoundFile])
             else:
                 os.system("start "+SoundFile)
+        elif BATCH_ALARM & os.path.exists(batchPath):
+            os.system(batchPath)
         else:
             webbrowser.open(InsomniaPromo.alarmUrl, new=2)
 
@@ -205,7 +212,7 @@ class CurrentPromo(InsomniaPromo):
 
     def _pollServer(self):
         if VERBAL:
-                print(".....................................................")
+            print(".....................................................")
         try:
             req = urllib2.Request(url=self.sourceUrl)
             descriptor = urllib2.urlopen(req)
@@ -228,7 +235,9 @@ class CurrentPromo(InsomniaPromo):
         title = replyDict[root]['title']
         price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
         discount = replyDict[root]['discount']
-        return GameInfo(title, price, fullPrice, discount)
+        stock = replyDict[root]['stock']
+        stockLeft = replyDict[root]['stockLeft']
+        return GameInfo(title, price, fullPrice, discount, stock, stockLeft)
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
