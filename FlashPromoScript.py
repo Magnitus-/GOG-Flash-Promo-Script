@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix
 import time
 import re
@@ -24,22 +27,26 @@ else:
 VERBAL = True  # Set to True if you want feedback
 ESCAPE = True  # Prevents the full power of regexes, but allows users to input special regex characters without escaping them
 FILE_ALARM = False  #Triggers alarm from a downloaded file instead of a youtube video
+ERROR_FORMAT = ("\n**************************************************"
+                "\n{0}\n{1}\n{2}\n"
+                "**************************************************\n")
 
 
 class GameInfo(object):
-    def __init__(self, title, price, fullPrice, discount):
+    def __init__(self, title, stockLeft, discount, price, fullPrice):
         self.title = title
+        self.stockLeft = stockLeft
+        self.discount = discount
         self.price = price
         self.fullPrice = fullPrice
-        self.discount = discount
 
     def __repr__(self):
-        return "GameInfo:{0},{1},{2},{3}".format(self.title, self.price,
-                                                 self.fullPrice, self.discount)
+        return "GameInfo:{0},{1},{2},{3}".format(
+            self.getSafeTitle(), self.price, self.fullPrice, self.discount)
 
     def __eq__(self, other):
         if isinstance(other, GameInfo):
-            return self.title == other.title
+            return self.getSafeTitle() == other.getSafeTitle()
         else:
             return False
 
@@ -51,8 +58,11 @@ class GameInfo(object):
         return hash(self.__repr__())
 
     def __str__(self):
-        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})".format(
-                self.getSafeTitle(), self.discount, self.price, self.fullPrice))
+        return (("{title: <30}   [{stockLeft: >4} Left]   {discount: >2}%  "
+                 "${price: <.2f} (${fullPrice: <.2f})").format(
+                title=self.getSafeTitle(), stockLeft=self.stockLeft,
+                discount=self.discount, price=self.price,
+                fullPrice=self.fullPrice))
 
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
@@ -95,9 +105,11 @@ class InsomniaPromo(object):
         try:
             with open(filename) as f:
                 lines = f.readlines()
-        except FileNotFoundError:
-            print ('Error! "{0}" not found'.format(filename))
-            raise e
+        except Exception as e:
+            print (ERROR_FORMAT.format(
+                    'Error opening file "{0}"!'.format(filename),
+                    type(e), str(e)))
+            return None
 
         patternIndex = 0
 
@@ -135,11 +147,16 @@ class InsomniaPromo(object):
             self._displayCurrentGames()
 
             # Check if current games match the patterns
-            if self._match(reply, self.patternList):
-                self._found()
+            try:
+                if self._match(reply, self.patternList):
+                    self._found()
+                    return
+                else:
+                    self._notFound()
+            except Exception as e:
+                print (ERROR_FORMAT.format(
+                       "Error while comparing patterns!", type(e), str(e)))
                 return
-            else:
-                self._notFound()
 
             time.sleep(self.delay)
 
@@ -157,14 +174,19 @@ class InsomniaPromo(object):
             self._displayCurrentGames()
 
             # Check if one of current games has been changed
-            if (not len(self.prevGames)):  # First run
-                self.prevGames = self.games
-            else:
-                PreviousSet = set(self.prevGames)
-                CurrentSet = set(self.games)
-                if not(PreviousSet.issubset(CurrentSet) and PreviousSet.issuperset(CurrentSet)):
+            try:
+                if (not len(self.prevGames)):  # First run
                     self.prevGames = self.games
-                    self._newGamesAlert()
+                else:
+                    PreviousSet = set(self.prevGames)
+                    CurrentSet = set(self.games)
+                    if not(PreviousSet.issubset(CurrentSet) and PreviousSet.issuperset(CurrentSet)):
+                        self.prevGames = self.games
+                        self._newGamesAlert()
+            except Exception as e:
+                print (ERROR_FORMAT.format(
+                       "Error while checking a new game!", type(e), str(e)))
+                return
 
             time.sleep(self.delay)
 
@@ -226,9 +248,11 @@ class CurrentPromo(InsomniaPromo):
 
     def _createGameInfo(self, replyDict, root):
         title = replyDict[root]['title']
-        price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
+        stockLeft = replyDict[root]['stockLeft']
         discount = replyDict[root]['discount']
-        return GameInfo(title, price, fullPrice, discount)
+        price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
+        return GameInfo(title, int(stockLeft), -1 * int(discount),
+                        float(price), float(fullPrice))
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
@@ -270,6 +294,8 @@ def main():
             promo.watchNewGames()
         elif answer == "2":
             patterns = CurrentPromo.loadPatterns("patterns.txt")
+            if not patterns:
+                continue
             promo.watchPatterns(patterns)
         elif answer == "3":
             break
@@ -277,6 +303,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
-        print(sys.exc_info()[:2])
+    except Exception as e:
+        print (ERROR_FORMAT.format("Error!", type(e), str(e)))
         ask("")
