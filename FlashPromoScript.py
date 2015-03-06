@@ -28,12 +28,13 @@ BATCH_ALARM = True #Executes a batch file instead of the above alarms
 
 
 class GameInfo(object):
-    def __init__(self, title, price, fullPrice, discount):
+    def __init__(self, title, price, fullPrice, discount, stock, stockLeft):
         self.title = title
         self.price = price
         self.fullPrice = fullPrice
         self.discount = discount
-		
+        self.stock = stock
+        self.stockLeft = stockLeft
 
     def __repr__(self):
         return "GameInfo:{0},{1},{2},{3}".format(self.title, self.price,
@@ -53,8 +54,8 @@ class GameInfo(object):
         return hash(self.__repr__())
 
     def __str__(self):
-        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})".format(
-                self.getSafeTitle(), self.discount, self.price, self.fullPrice))
+        return ("{0: <30}    -{1: <2}%  ${2: <5} (${3})  {5}/{4}".format(
+                self.getSafeTitle(), self.discount, self.price, self.fullPrice, self.stock, self.stockLeft))
 
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
@@ -234,7 +235,9 @@ class CurrentPromo(InsomniaPromo):
         title = replyDict[root]['title']
         price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
         discount = replyDict[root]['discount']
-        return GameInfo(title, price, fullPrice, discount)
+        stock = replyDict[root]['stock']
+        stockLeft = replyDict[root]['stockLeft']
+        return GameInfo(title, price, fullPrice, discount, stock, stockLeft)
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
