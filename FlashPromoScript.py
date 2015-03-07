@@ -68,7 +68,6 @@ class GameInfo(object):
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
 
-
 class InsomniaPromo(object):
     alarmUrl = "http://www.youtube.com/watch?v=FoX7vd30zq8"
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
@@ -194,16 +193,34 @@ class InsomniaPromo(object):
                 return
 
             time.sleep(self.delay)
+            
+    def _pollServer(self):
+        if VERBAL:
+            print(".....................................................")
+        try:
+            req = urllib2.Request(url=self.sourceUrl)
+            descriptor = urllib2.urlopen(req)
+        except ExceptionClass:
+            print(sys.exc_info()[:2])
+            time.sleep(self.delay)
+            return ""
 
+        body = Convert(descriptor.read())
+        return body
 
-class CurrentPromo(InsomniaPromo):
-    def __init__(self, sourceUrl, delay):
-        self.sourceUrl = sourceUrl
-        self.delay = delay
+    def _match(self, reply, patterns):
         self.foundPattern = ""
-        self.games = []
-        self.prevGames = []
 
+        for pattern in patterns:
+            Match = pattern.search(reply)
+            if Match:
+                self.foundPattern = pattern.pattern
+                return True
+        return False
+        
+    def _processPatterns(self, patterns):
+        return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
+        
     def _newGamesAlert(self):
         if VERBAL:
             print("New games!")
@@ -226,23 +243,17 @@ class CurrentPromo(InsomniaPromo):
     def _notFound(self):
         if VERBAL:
             print("No game found. Will now sleep for " + str(self.delay) + " seconds.")
+            
+    def _getFoundPattern(self):
+        return self.foundPattern
 
-    def _processPatterns(self, patterns):
-        return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
-
-    def _pollServer(self):
-        if VERBAL:
-            print(".....................................................")
-        try:
-            req = urllib2.Request(url=self.sourceUrl)
-            descriptor = urllib2.urlopen(req)
-        except ExceptionClass:
-            print(sys.exc_info()[:2])
-            time.sleep(self.delay)
-            return ""
-
-        body = Convert(descriptor.read())
-        return body
+class CurrentPromo(InsomniaPromo):
+    def __init__(self, sourceUrl, delay):
+        self.sourceUrl = sourceUrl
+        self.delay = delay
+        self.foundPattern = ""
+        self.games = []
+        self.prevGames = []
 
     def _displayCurrentGames(self):
         try:
@@ -265,24 +276,10 @@ class CurrentPromo(InsomniaPromo):
                         self._createGameInfo(replyDict, 'fresh')]
         return currentGames
 
-    def _match(self, reply, patterns):
-        self.foundPattern = ""
-
-        for pattern in patterns:
-            Match = pattern.search(reply)
-            if Match:
-                self.foundPattern = pattern.pattern
-                return True
-        return False
-
-    def _getFoundPattern(self):
-        return self.foundPattern
-
 
 def ask(message):
     answer = userInput(message)
     return answer
-
 
 def main():
     promo = CurrentPromo(sourceUrl="http://www.gog.com/doublesomnia/getdeals", delay=10.0)
