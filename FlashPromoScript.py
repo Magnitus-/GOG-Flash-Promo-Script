@@ -1,4 +1,5 @@
-# Authors: Eric Vallee (eric_vallee2003@yahoo.ca); Stephen Phoenix; Jonathan Markevich
+# Original Author: Eric Vallee (eric_vallee2003@yahoo.ca); 
+# Contributors: Stephen Phoenix; Jonathan Markevich
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import time
@@ -257,23 +258,21 @@ class CurrentPromo(InsomniaPromo):
 
     def _displayCurrentGames(self):
         try:
-            print ("Seasoned: {0}".format(self.games[0]))
-            print ("Fresh:    {0}".format(self.games[1]))
+            print ("Current Game: {0}".format(self.games[0]))
         except Exception:
             print ("Error displaying game title!")
 
-    def _createGameInfo(self, replyDict, root):
-        title = replyDict[root]['title']
-        stock = replyDict[root]['stock']
-        stockLeft = replyDict[root]['stockLeft']
-        discount = replyDict[root]['discount']
-        price, fullPrice = replyDict[root]['prices']['p']['USD']['1'].split(',')
+    def _createGameInfo(self, replyDict):
+        title = replyDict['product']['title']
+        stock = replyDict['amountTotal']
+        stockLeft = replyDict['amountLeft']
+        discount = replyDict['discount']
+        price, fullPrice = replyDict['product']['prices']['groupsPrices']['USD']['1'].split(';')
         return GameInfo(title=title, price=float(price), fullPrice=float(fullPrice), discount=int(discount), stock=int(stock), stockLeft=int(stockLeft))
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
-        currentGames = [self._createGameInfo(replyDict, 'oldschool'),
-                        self._createGameInfo(replyDict, 'fresh')]
+        currentGames = [self._createGameInfo(replyDict),]
         return currentGames
 
 
@@ -282,7 +281,7 @@ def ask(message):
     return answer
 
 def main():
-    promo = CurrentPromo(sourceUrl="http://www.gog.com/doublesomnia/getdeals", delay=10.0)
+    promo = CurrentPromo(sourceUrl="https://www.gog.com/insomnia/current_deal", delay=5.0)
 
     while (True):
         print ("\nGOG Flash Promo Watcher")
