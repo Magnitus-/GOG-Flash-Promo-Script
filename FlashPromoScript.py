@@ -161,7 +161,6 @@ class InsomniaPromo(object):
             except Exception as e:
                 print (ERROR_FORMAT.format(
                        "Error while comparing patterns!", type(e), str(e)))
-                return
 
             time.sleep(self.delay)
 
@@ -191,7 +190,6 @@ class InsomniaPromo(object):
             except Exception as e:
                 print (ERROR_FORMAT.format(
                        "Error while checking a new game!", type(e), str(e)))
-                return
 
             time.sleep(self.delay)
             
@@ -272,7 +270,12 @@ class CurrentPromo(InsomniaPromo):
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
-        currentGames = [self._createGameInfo(replyDict),]
+        try:
+            currentGames = [self._createGameInfo(replyDict),]
+        except Exception as e:
+            print (ERROR_FORMAT.format(
+                   "Error while converting server info!", type(e), str(e)))
+            currentGames = []
         return currentGames
 
 
