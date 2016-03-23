@@ -261,11 +261,17 @@ class CurrentPromo(InsomniaPromo):
             print ("Error displaying game title!")
 
     def _createGameInfo(self, replyDict):
-        title = replyDict['product']['title']
+        if 'product' in replyDict:
+            title = replyDict['product']['title']
+            price, fullPrice = replyDict['product']['prices']['groupsPrices']['USD']['1'].split(';')
+        else:
+            title = replyDict['bundle']['title']
+            prices = [replyDict['bundle']['prices'][key]['groupsPrices']['USD']['1'].split(';') for key in replyDict['bundle']['prices']]
+            price = str(sum([float(elem[1]) for elem in prices]))
+            fullprice = str(sum([float(elem[0]) for elem in prices]))
         stock = replyDict['amountTotal']
         stockLeft = replyDict['amountLeft']
         discount = replyDict['discount']
-        price, fullPrice = replyDict['product']['prices']['groupsPrices']['USD']['1'].split(';')
         return GameInfo(title=title, price=float(price), fullPrice=float(fullPrice), discount=int(discount), stock=int(stock), stockLeft=int(stockLeft))
 
     def _getCurrentGames(self, body):
