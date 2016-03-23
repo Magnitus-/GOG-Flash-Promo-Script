@@ -1,7 +1,9 @@
-# Original Author: Eric Vallee (eric_vallee2003@yahoo.ca); 
-# Contributors: Stephen Phoenix; Jonathan Markevich
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# Original Author: Eric Vallee (eric_vallee2003@yahoo.ca); 
+# Contributors: Stephen Phoenix; Jonathan Markevich
+
 import time
 import re
 import webbrowser
