@@ -270,7 +270,7 @@ class CurrentPromo(InsomniaPromo):
             title = replyDict['bundle']['title']
             prices = [replyDict['bundle']['prices'][key]['groupsPrices']['USD']['1'].split(';') for key in replyDict['bundle']['prices']]
             price = str(sum([float(elem[1]) for elem in prices]))
-            fullprice = str(sum([float(elem[0]) for elem in prices]))
+            fullPrice = str(sum([float(elem[0]) for elem in prices]))
         stock = replyDict['amountTotal']
         stockLeft = replyDict['amountLeft']
         discount = replyDict['discount']
