@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Original Author: Eric Vallee (eric_vallee2003@yahoo.ca); 
+# Original Author: Eric Vallee (eric_vallee@webificservices.com);
 # Contributors: Stephen Phoenix; Jonathan Markevich
 
-import time
-import re
-import webbrowser
-import sys
-import os
-import subprocess
-import json
+import time, re, webbrowser, sys, os, subprocess, json, datetime
 
 if sys.version_info.major == 2:
     import urllib2 as urllib2
@@ -44,6 +38,8 @@ class GameInfo(object):
         self.discount = discount
         self.stock = stock
         self.stockLeft = stockLeft
+        self.stockLabel = 'duration'
+        self.stockLeftLabel = 'duration left'
 
     def __repr__(self):
         return "GameInfo:{0},{1},{2},{3}".format(
@@ -63,10 +59,11 @@ class GameInfo(object):
         return hash(self.__repr__())
 
     def __str__(self):
-        return ("{title: <30}    -{discount: >2}%  ${price: <.2f} (${fullPrice: <.2f})  {stockLeft: >4}/{stock: >4}".format(
-                title=self.getSafeTitle(), discount=self.discount, 
-                price=self.price, fullPrice=self.fullPrice, 
-                stock=self.stock, stockLeft=self.stockLeft))
+        return "title: {title}, discount: -{discount}%, price: {price} (from {fullPrice}), {stockLabel}: {stock}, {stockLeftLabel}: {stockLeft}".format(
+                title=self.getSafeTitle(), discount=self.discount,
+                price=self.price, fullPrice=self.fullPrice,
+                stock=self.stock, stockLeft=self.stockLeft,
+                stockLabel=self.stockLabel, stockLeftLabel=self.stockLeftLabel)
 
     def getSafeTitle(self):
         return Convert(self.title.encode(sys.stdout.encoding, errors='replace'))
@@ -76,7 +73,7 @@ class InsomniaPromo(object):
     SoundFileUrl = "http://soundbible.com/grab.php?id=1550&type=wav"
     SoundFile = "Alarm.wav"
     batchPath = "./AlarmScript.sh"
-	
+
     @staticmethod
     def _soundAlarm():
         SoundFile = InsomniaPromo.SoundFile
@@ -194,7 +191,7 @@ class InsomniaPromo(object):
                        "Error while checking a new game!", type(e), str(e)))
 
             time.sleep(self.delay)
-            
+
     def _pollServer(self):
         if VERBAL:
             print(".....................................................")
@@ -218,10 +215,10 @@ class InsomniaPromo(object):
                 self.foundPattern = pattern.pattern
                 return True
         return False
-        
+
     def _processPatterns(self, patterns):
         return [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
-        
+
     def _newGamesAlert(self):
         if VERBAL:
             print("New games!")
@@ -244,7 +241,7 @@ class InsomniaPromo(object):
     def _notFound(self):
         if VERBAL:
             print("No game found. Will now sleep for " + str(self.delay) + " seconds.")
-            
+
     def _getFoundPattern(self):
         return self.foundPattern
 
@@ -258,28 +255,33 @@ class CurrentPromo(InsomniaPromo):
 
     def _displayCurrentGames(self):
         try:
-            print ("Current Game: {0}".format(self.games[0]))
+            index = 1
+            for game in self.games:
+                print "Game {0}: {1}".format(index, game)
+                index+=1
         except Exception:
             print ("Error displaying game title!")
 
-    def _createGameInfo(self, replyDict):
-        if 'product' in replyDict:
-            title = replyDict['product']['title']
-            price, fullPrice = replyDict['product']['prices']['groupsPrices']['USD']['1'].split(';')
-        else:
-            title = replyDict['bundle']['title']
-            prices = [replyDict['bundle']['prices'][key]['groupsPrices']['USD']['1'].split(';') for key in replyDict['bundle']['prices']]
-            price = str(sum([float(elem[1]) for elem in prices]))
-            fullPrice = str(sum([float(elem[0]) for elem in prices]))
-        stock = replyDict['amountTotal']
-        stockLeft = replyDict['amountLeft']
-        discount = replyDict['discount']
-        return GameInfo(title=title, price=float(price), fullPrice=float(fullPrice), discount=int(discount), stock=int(stock), stockLeft=int(stockLeft))
+    def _createGameInfo(self, gameDict):
+        title = gameDict['_embedded']['product']['title']
+
+        currency = gameDict['_embedded']['product']['discount']['symbol']
+        price = gameDict['_embedded']['product']['discount']['finalAmount'] + currency
+        fullPrice = gameDict['_embedded']['product']['discount']['baseAmount'] + currency
+        discount = gameDict['_embedded']['product']['discount']['discountPercentage']
+
+        startDate = datetime.datetime.strptime( gameDict['startDate'], "%Y-%m-%dT%H:%M:%SZ" )
+        endDate = datetime.datetime.strptime( gameDict['endDate'], "%Y-%m-%dT%H:%M:%SZ" )
+        now = datetime.datetime.strptime( gameDict['now'], "%Y-%m-%dT%H:%M:%SZ" )
+
+        stock = endDate - startDate
+        stockLeft = endDate - now
+        return GameInfo(title=title, price=price, fullPrice=fullPrice, discount=discount, stock=stock, stockLeft=stockLeft)
 
     def _getCurrentGames(self, body):
         replyDict = json.loads(body)
         try:
-            currentGames = [self._createGameInfo(replyDict),]
+            currentGames = [self._createGameInfo(gameDict) for gameDict in replyDict['_embedded']['items']]
         except Exception as e:
             print (ERROR_FORMAT.format(
                    "Error while converting server info!", type(e), str(e)))
@@ -292,7 +294,7 @@ def ask(message):
     return answer
 
 def main():
-    promo = CurrentPromo(sourceUrl="https://www.gog.com/insomnia/current_deal", delay=5.0)
+    promo = CurrentPromo(sourceUrl="https://www.gog.com/flashDealsSets/14674", delay=5.0)
 
     while (True):
         print ("\nGOG Flash Promo Watcher")
